@@ -34,7 +34,7 @@ Server metrics need to be collected and visualized to analyze the data. Promethe
 Install Docker with Docker Compose. Check out [here](https://docs.docker.com/engine/install/)
 
 ```bash 
-docker build -t [image_name] 
+docker build --tag [image_name] .
 
 ```
 
