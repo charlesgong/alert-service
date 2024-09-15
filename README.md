@@ -4,18 +4,13 @@ collector includes
 
 
 # Alert Metrics
-Query from
+Query from Promethues, and log alert information when reached the rule limit.
 
 ## Dependencies check, please refer https://github.com/charlesgong/metrics-service 
-Promethues
-
-Metric storage
-
-### Grafana
-
-Visualization, please import sample-grafana.json after startup
 
 ## Getting Start
+go version 1.22.0
+
 In our Go project, we just need to import the dependent library.
 
 ```go mod download```
