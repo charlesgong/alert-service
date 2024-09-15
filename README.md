@@ -6,7 +6,7 @@ collector includes
 # Alert Metrics
 Query from Promethues, and log alert information when reached the rule limit.
 
-## Dependencies check, please refer https://github.com/charlesgong/metrics-service 
+### Dependencies check, please refer https://github.com/charlesgong/metrics-service 
 
 ## Getting Start
 go version 1.22.0
