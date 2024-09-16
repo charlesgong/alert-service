@@ -2,6 +2,18 @@
 
 package main
 
+/*
+Currently only have implemented half of expr
+If have time, using alert manager's design or just use alert manager instead
+rules:
+  - alert: HighRequestLatency
+    expr: job:request_latency_seconds:mean5m{job="myjob"} > 0.5
+    for: 10m
+    labels:
+    severity: page
+    annotations:
+    summary: High request latency
+*/
 import (
 	"context"
 	"fmt"
@@ -21,18 +33,6 @@ var (
 	rules          = []string{"(avg by(instance) (rate(cpu_usage[5m])) * 100)"}
 )
 
-/*
-Currently only have implemented half of expr
-If have time, using alert manager's design or just use alert manager instead
-rules:
-  - alert: HighRequestLatency
-    expr: job:request_latency_seconds:mean5m{job="myjob"} > 0.5
-    for: 10m
-    labels:
-    severity: page
-    annotations:
-    summary: High request latency
-*/
 func queryPrometheus(rule string) model.Value {
 	client, err := api.NewClient(api.Config{
 		Address: PROMETHEUS_URL,
@@ -63,9 +63,10 @@ func queryPrometheus(rule string) model.Value {
 	return queryResult
 }
 
+// all the implements after query Prometheus are BS*#@,
+// sorry don't have enough time to finish the lexical & syntactic analysis in 1 day
 func queryAlertRules() {
 
-	defer time.Sleep(SLEEP_INTERVAL)
 	for _, rule := range rules {
 		queryResult := queryPrometheus(rule)
 		metrics := parseMetrics(queryResult.String(), ".*@")
@@ -109,6 +110,17 @@ func parseMetrics(s string, reg string) []int {
 func main() {
 	slog.Info("alert service started")
 	for {
-		queryAlertRules()
+
+		jobChan := make(chan int, 100)
+
+		for i := 0; i < 8; i++ {
+			go queryAlertRules(jobChan)
+		}
+
+		for _, rule := range rules {
+			jobChan <- rule
+		}
+		close(jobChan)
+		time.Sleep(SLEEP_INTERVAL)
 	}
 }
