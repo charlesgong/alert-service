@@ -65,23 +65,20 @@ func queryPrometheus(rule string) model.Value {
 
 // all the implements after query Prometheus are BS*#@,
 // sorry don't have enough time to finish the lexical & syntactic analysis in 1 day
-func queryAlertRules() {
+func queryAlertRules(jobChan chan) {
+	rule := <- jobChan
+	queryResult := queryPrometheus(rule)
+	metrics := parseMetrics(queryResult.String(), ".*@")
 
-	for _, rule := range rules {
-		queryResult := queryPrometheus(rule)
-		metrics := parseMetrics(queryResult.String(), ".*@")
-
-		var flag = false
-		for metric := range metrics {
-			if metric > 80 {
-				flag = true
-				break
-			}
+	var flag = false
+	for metric := range metrics {
+		if metric > 80 {
+			flag = true
+			break
 		}
-		if flag {
-			slog.Error("CPU usage over 80% \n")
-		}
-
+	}
+	if flag {
+		slog.Error("CPU usage over 80% \n")
 	}
 
 }
@@ -111,7 +108,7 @@ func main() {
 	slog.Info("alert service started")
 	for {
 
-		jobChan := make(chan int, 100)
+		jobChan := make(chan string, 100)
 
 		for i := 0; i < 8; i++ {
 			go queryAlertRules(jobChan)
