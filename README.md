@@ -6,7 +6,7 @@ collector includes
 # Alert Metrics
 Query from Promethues, and log alert information when reached the rule limit.
 
-## Dependencies check, please refer https://github.com/charlesgong/metrics-service 
+### Dependencies check, please refer https://github.com/charlesgong/metrics-service 
 
 ## Getting Start
 go version 1.22.0
@@ -34,7 +34,7 @@ Server metrics need to be collected and visualized to analyze the data. Promethe
 Install Docker with Docker Compose. Check out [here](https://docs.docker.com/engine/install/)
 
 ```bash 
-docker build -t [image_name] 
+docker build --tag [image_name] .
 
 ```
 
