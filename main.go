@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"sync"
 
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -65,22 +66,26 @@ func queryPrometheus(rule string) model.Value {
 
 // all the implements after query Prometheus are BS*#@,
 // sorry don't have enough time to finish the lexical & syntactic analysis in 1 day
-func queryAlertRules(jobChan chan) {
-	rule := <- jobChan
-	queryResult := queryPrometheus(rule)
-	metrics := parseMetrics(queryResult.String(), ".*@")
+func queryAlertRules(jobChan chan, wg *sync.WaitGroup) {
+	for {
+		rule, ok := <- jobChan
+		if !ok {
+			wg.Done()
+		}
+		queryResult := queryPrometheus(rule)
+		metrics := parseMetrics(queryResult.String(), ".*@")
 
-	var flag = false
-	for metric := range metrics {
-		if metric > 80 {
-			flag = true
-			break
+		var flag = false
+		for metric := range metrics {
+			if metric > 80 {
+				flag = true
+				break
+			}
+		}
+		if flag {
+			slog.Error("CPU usage over 80% \n")
 		}
 	}
-	if flag {
-		slog.Error("CPU usage over 80% \n")
-	}
-
 }
 
 func parseMetrics(s string, reg string) []int {
@@ -107,16 +112,18 @@ func parseMetrics(s string, reg string) []int {
 func main() {
 	slog.Info("alert service started")
 	for {
-
+		var wg sync.WaitGroup
+		wg.Add(8)
 		jobChan := make(chan string, 100)
 
 		for i := 0; i < 8; i++ {
-			go queryAlertRules(jobChan)
+			go queryAlertRules(jobChan, &wg)
 		}
 
 		for _, rule := range rules {
 			jobChan <- rule
 		}
+		wg.Wait()
 		close(jobChan)
 		time.Sleep(SLEEP_INTERVAL)
 	}
